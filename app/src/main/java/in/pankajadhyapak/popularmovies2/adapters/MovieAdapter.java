@@ -62,7 +62,7 @@ public class MovieAdapter extends RecyclerView.Adapter<MovieAdapter.ViewHolder> 
                 Intent intent = new Intent(mContext, MovieDetails.class);
                 intent.putExtra("movie_detail", movie);
                 ActivityOptionsCompat options = ActivityOptionsCompat.
-                        makeSceneTransitionAnimation((AppCompatActivity)mContext, (View)holder.singleMovie, "Movie Poster");
+                        makeSceneTransitionAnimation((AppCompatActivity)mContext, (View)holder.singleMovie, "movie_poster");
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     mContext.startActivity(intent, options.toBundle());
                 }else {
