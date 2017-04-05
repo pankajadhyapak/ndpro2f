@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     app:layout_behavior="@string/appbar_scrolling_view_behavior"
-    tools:context="in.pankajadhyapak.popularmovies.activites.MovieDetails"
+    tools:context=".activites.MovieDetails"
     >
     <LinearLayout
         android:layout_width="match_parent"
@@ -23,6 +23,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/empty_photo"
+                android:transitionName="@string/movie_poster"
                 android:contentDescription="@string/movie_poster" />
 
             <LinearLayout

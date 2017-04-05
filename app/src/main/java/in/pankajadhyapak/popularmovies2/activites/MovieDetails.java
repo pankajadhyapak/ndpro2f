@@ -1,11 +1,12 @@
 package in.pankajadhyapak.popularmovies2.activites;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -22,28 +23,27 @@ import java.util.ArrayList;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import in.pankajadhyapak.popularmovies2.App;
 import in.pankajadhyapak.popularmovies2.Constants;
 import in.pankajadhyapak.popularmovies2.R;
 import in.pankajadhyapak.popularmovies2.adapters.ReviewAdapter;
 import in.pankajadhyapak.popularmovies2.adapters.TrailerAdapter;
 import in.pankajadhyapak.popularmovies2.api.MovieApi;
+import in.pankajadhyapak.popularmovies2.api.RetroFit;
+import in.pankajadhyapak.popularmovies2.data.MovieDbHelper;
 import in.pankajadhyapak.popularmovies2.models.AllReviews;
 import in.pankajadhyapak.popularmovies2.models.AllTrailers;
 import in.pankajadhyapak.popularmovies2.models.Movie;
 import in.pankajadhyapak.popularmovies2.models.Review;
 import in.pankajadhyapak.popularmovies2.models.Trailer;
-import okhttp3.OkHttpClient;
-import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
 public class MovieDetails extends AppCompatActivity {
 
     private static final String TAG = "MovieDetails";
-
     private static final String API_URL = "http://api.themoviedb.org/3/movie/";
 
     @Bind(R.id.toolbar)
@@ -71,28 +71,33 @@ public class MovieDetails extends AppCompatActivity {
     RecyclerView reviewRv;
 
     private ArrayList<Trailer> allTrailer = new ArrayList<>();
-    private RecyclerView.Adapter mTrailerAdapter;
-
     private ArrayList<Review> allReviews = new ArrayList<>();
+    private RecyclerView.Adapter mTrailerAdapter;
     private RecyclerView.Adapter mReviewAdapter;
+    private Movie movie;
+    MovieDbHelper mDbHelper;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_movie_details);
         ButterKnife.bind(this);
-
         setSupportActionBar(toolbar);
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         Intent intent = getIntent();
-        Movie movie = (Movie) intent.getParcelableExtra("movie_detail");
+        movie = (Movie) intent.getParcelableExtra("movie_detail");
+        mDbHelper = new MovieDbHelper(this);
         Log.e(TAG, "onCreate: " + movie.getTitle());
 
         ActionBar ab = getSupportActionBar();
         if (ab != null) {
             ab.setTitle(movie.getTitle());
+            ab.setDisplayHomeAsUpEnabled(true);
         }
+
+
+        setFabIcon(movie.getId());
 
         if (movie.getPosterPath() != null) {
             String posterUrl = "http://image.tmdb.org/t/p/w500/" + movie.getPosterPath();
@@ -118,32 +123,42 @@ public class MovieDetails extends AppCompatActivity {
         mReviewAdapter = new ReviewAdapter(this, allReviews);
         reviewRv.setAdapter(mReviewAdapter);
 
-        getTrailers(movie.getId());
-        getReviews(movie.getId());
+        if(App.hasNetwork()){
+            getTrailers(movie.getId());
+            getReviews(movie.getId());
+        }else {
+            App.showNetworkError(reviewRv);
+        }
+
+    }
+
+    private void setFabIcon(Integer id) {
+        if(mDbHelper.movieExists(id)){
+            Log.e(TAG, "not fav "+id);
+            fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite));
+        }else{
+            Log.e(TAG, "fav "+id);
+            fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite_border));
+        }
     }
 
     private void getReviews(Integer id) {
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-        httpClient.addInterceptor(logging);
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(API_URL)
-                .client(httpClient.build())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
+        Retrofit retrofit = RetroFit.getInstance();
         MovieApi api = retrofit.create(MovieApi.class);
         Call<AllReviews> call = api.getReviews(id, Constants.API_KEY);
         call.enqueue(new Callback<AllReviews>() {
             @Override
-            public void onResponse(Call<AllReviews> call, Response<AllReviews> response) {
+            public void onResponse(Call<AllReviews> call, final Response<AllReviews> response) {
                 Log.e(TAG, "onResponse: " + response.body().getResults().size());
-                allReviews.clear();
-                allReviews.addAll(response.body().getResults());
-                mReviewAdapter.notifyDataSetChanged();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        allReviews.clear();
+                        allReviews.addAll(response.body().getResults());
+                        mReviewAdapter.notifyDataSetChanged();
+                    }
+                });
             }
 
             @Override
@@ -154,27 +169,22 @@ public class MovieDetails extends AppCompatActivity {
     }
 
     private void getTrailers(Integer id) {
-        HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
-        logging.setLevel(HttpLoggingInterceptor.Level.BODY);
-        OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
-        httpClient.addInterceptor(logging);
-
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(API_URL)
-                .client(httpClient.build())
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
-
+        Retrofit retrofit = RetroFit.getInstance();
         MovieApi api = retrofit.create(MovieApi.class);
         Call<AllTrailers> call = api.getTrailers(id, Constants.API_KEY);
         call.enqueue(new Callback<AllTrailers>() {
             @Override
-            public void onResponse(Call<AllTrailers> call, Response<AllTrailers> response) {
+            public void onResponse(Call<AllTrailers> call, final Response<AllTrailers> response) {
                 Log.e(TAG, "onResponse: " + response.body().getResults().size());
-                allTrailer.clear();
-                allTrailer.addAll(response.body().getResults());
-                mTrailerAdapter.notifyDataSetChanged();
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        allTrailer.clear();
+                        allTrailer.addAll(response.body().getResults());
+                        mTrailerAdapter.notifyDataSetChanged();
+                    }
+                });
             }
 
             @Override
@@ -186,8 +196,27 @@ public class MovieDetails extends AppCompatActivity {
 
     @OnClick(R.id.fab)
     public void onViewClicked(View v) {
-        Snackbar.make(v, "Favourite this in part 2", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
+        Log.e(TAG, "check movie: "+mDbHelper.movieExists(movie.getId()));
+        if(mDbHelper.movieExists(movie.getId())){
+            int deletedRows = mDbHelper.deleteMovie(movie.getId());
+            Log.e(TAG, "delete movie: "+deletedRows );
+            if(deletedRows > 0){
+                fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite_border));
+                Snackbar.make(v, "Removed From Favourites", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        }else{
+            long newRowId = mDbHelper.addMovie(movie);
+            if(newRowId > 0){
+                Log.e(TAG, "onViewClicked: "+newRowId );
+                fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite));
+                Snackbar.make(v, "Movie Added to Favourites", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }else{
+                Snackbar.make(v, "Failed to Add", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        }
     }
 
     @Override

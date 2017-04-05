@@ -34,6 +34,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/movie_poster"
+                android:transitionName="@string/movie_poster"
                 app:srcCompat="@drawable/empty_photo" />
 
             <LinearLayout
