@@ -1,6 +1,7 @@
 package in.pankajadhyapak.popularmovies2.fragments;
 
 import android.os.Bundle;
+import android.os.Parcelable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -28,13 +29,17 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+import static in.pankajadhyapak.popularmovies2.Constants.KEY_INSTANCE_STATE_RV_POSITION;
+
 public class MostPopular extends Fragment {
 
     private static final String TAG = "MostPopular";
 
-    private GridLayoutManager layout;
+    private GridLayoutManager layout = null;
     private ArrayList<Movie> allMovies = new ArrayList<>();
     private RecyclerView.Adapter mMovieAdapter;
+
+    Parcelable mLayoutManagerSavedState = null;
 
     private int firstVisibleItem, visibleItemCount, totalItemCount;
     private int previousTotal = 0;
@@ -56,7 +61,15 @@ public class MostPopular extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(layout != null){
+            outState.putParcelable(KEY_INSTANCE_STATE_RV_POSITION, layout.onSaveInstanceState());
+        }
+    }
+
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, final Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_most_popular, container, false);
         ButterKnife.bind(this, view);
@@ -65,7 +78,8 @@ public class MostPopular extends Fragment {
         recyclerView.setLayoutManager(layout);
         mMovieAdapter = new MovieAdapter(getActivity(), allMovies);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
-        getMovies();
+
+        getMovies(savedInstanceState);
         recyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
@@ -83,7 +97,7 @@ public class MostPopular extends Fragment {
                 if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
                     if (App.hasNetwork()) {
                         App.showNetworkLoading(recyclerView);
-                        getMovies();
+                        getMovies(null);
                         loading = true;
                     } else {
                         App.showNetworkError(recyclerView);
@@ -96,11 +110,16 @@ public class MostPopular extends Fragment {
         return view;
     }
 
-    private void getMovies() {
+    private void getMovies(Bundle savedInstanceState) {
         Retrofit retrofit = RetroFit.getInstance();
         MovieApi api = retrofit.create(MovieApi.class);
         Call<AllMovies> call = api.getPopularMovies(Constants.API_KEY, pageCount + "");
 
+        if (savedInstanceState != null) {
+            mLayoutManagerSavedState = savedInstanceState.getParcelable(KEY_INSTANCE_STATE_RV_POSITION);
+        }else{
+            mLayoutManagerSavedState = null;
+        }
         call.enqueue(new Callback<AllMovies>() {
             @Override
             public void onResponse(Call<AllMovies> call, Response<AllMovies> response) {
@@ -110,6 +129,9 @@ public class MostPopular extends Fragment {
                     @Override
                     public void run() {
                         mMovieAdapter.notifyDataSetChanged();
+                        if (mLayoutManagerSavedState != null) {
+                            layout.onRestoreInstanceState(mLayoutManagerSavedState);
+                        }
                     }
                 });
                 Log.e(TAG, "all movies size: " + allMovies.size());

@@ -6,5 +6,5 @@ public class Constants {
     public static final String API_KEY = "5c31fe4e68537ffcffdacd5bf0e89ca3";
     public static final String MOVIE_DETAIL = "movie_detail";
     public static final String TMDB_IMAGE_W500 = "http://image.tmdb.org/t/p/w500/";
-
+    public static final String KEY_INSTANCE_STATE_RV_POSITION = "rv_position";
 }
