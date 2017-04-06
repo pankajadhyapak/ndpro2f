@@ -1,9 +1,6 @@
 package in.pankajadhyapak.popularmovies2.fragments;
 
-import android.app.ProgressDialog;
-import android.content.Context;
 import android.os.Bundle;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.GridLayoutManager;
@@ -33,12 +30,9 @@ import retrofit2.Retrofit;
 
 public class MostPopular extends Fragment {
 
-    @Bind(R.id.recycler_view)
-    RecyclerView recyclerView;
+    private static final String TAG = "MostPopular";
 
     private GridLayoutManager layout;
-    private static final String MOVIE_DB_KEY = "movieList";
-    private static final String TAG = MostPopular.class.getSimpleName();
     private ArrayList<Movie> allMovies = new ArrayList<>();
     private RecyclerView.Adapter mMovieAdapter;
 
@@ -47,6 +41,9 @@ public class MostPopular extends Fragment {
     private boolean loading = true;
     private int visibleThreshold = 4;
     private int pageCount = 1;
+
+    @Bind(R.id.recycler_view)
+    RecyclerView recyclerView;
 
     public MostPopular() {
     }
@@ -84,12 +81,11 @@ public class MostPopular extends Fragment {
                     }
                 }
                 if (!loading && (totalItemCount - visibleItemCount) <= (firstVisibleItem + visibleThreshold)) {
-                    if(App.hasNetwork()){
-                        Snackbar.make(recyclerView, "Loading Page "+pageCount, Snackbar.LENGTH_LONG)
-                                .setAction("Action", null).show();
+                    if (App.hasNetwork()) {
+                        App.showNetworkLoading(recyclerView);
                         getMovies();
                         loading = true;
-                    }else {
+                    } else {
                         App.showNetworkError(recyclerView);
                     }
 
@@ -103,7 +99,7 @@ public class MostPopular extends Fragment {
     private void getMovies() {
         Retrofit retrofit = RetroFit.getInstance();
         MovieApi api = retrofit.create(MovieApi.class);
-        Call<AllMovies> call = api.getPopularMovies(Constants.API_KEY, pageCount+"");
+        Call<AllMovies> call = api.getPopularMovies(Constants.API_KEY, pageCount + "");
 
         call.enqueue(new Callback<AllMovies>() {
             @Override
@@ -134,18 +130,6 @@ public class MostPopular extends Fragment {
         int nColumns = width / widthDivider;
         if (nColumns < 2) return 2;
         return nColumns;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-
     }
 
     @Override

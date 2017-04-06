@@ -35,9 +35,9 @@
 
         <provider
             android:name=".data.MovieContentProvider"
-            android:authorities="movie"
+            android:authorities="in.pankajadhyapak.popularmovies2"
             android:enabled="true"
-            android:exported="false"></provider>
+            android:exported="false"/>
     </application>
 
 </manifest>

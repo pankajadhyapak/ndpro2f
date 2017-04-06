@@ -3,10 +3,6 @@ package in.pankajadhyapak.popularmovies2.models;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
-/**
- * Created by pankaj on 29/03/17.
- */
-
 public class Trailer {
 
     @SerializedName("id")

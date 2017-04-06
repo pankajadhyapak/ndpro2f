@@ -21,13 +21,14 @@ import in.pankajadhyapak.popularmovies2.models.Trailer;
 
 public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.ViewHolder> {
 
+    private static final String TAG = "TrailerAdapter";
     private ArrayList<Trailer> mTrailers;
     private Context mContext;
 
     public TrailerAdapter(Context mContext, ArrayList<Trailer> movies) {
         this.mTrailers = movies;
         this.mContext = mContext;
-        Log.e("TrailerAdapter", "MovieAdapter: " + mTrailers.size());
+        Log.e(TAG, "MovieAdapter: " + mTrailers.size());
     }
 
     @Override
@@ -39,15 +40,15 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.ViewHold
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final Trailer trailer = mTrailers.get(holder.getAdapterPosition());
-        Log.e("TrailerAdapter", "onBindViewHolder: "+ trailer.getName());
         holder.mTrailerName.setText(trailer.getName());
-        holder.mSiteName.setText("Site : " +trailer.getSite());
-        holder.mQualityName.setText("Quality : " +trailer.getSize()+"p");
+        holder.mSiteName.setText(String.format(mContext.getString(R.string.trailer_site), trailer.getSite()));
+        holder.mQualityName.setText(String.format(mContext.getString(R.string.trailer_quality), trailer.getSize()));
         Picasso.with(mContext)
-                .load("http://img.youtube.com/vi/"+trailer.getKey()+"/mqdefault.jpg")
+                .load(String.format(mContext.getString(R.string.trailer_thumbnail), trailer.getKey()))
                 .placeholder(R.drawable.ic_play_circle_outline_black_128dp)
                 .error(R.drawable.ic_play_circle_outline_black_128dp)
                 .into(holder.mTrailerPoster);
+
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -62,15 +63,14 @@ public class TrailerAdapter extends RecyclerView.Adapter<TrailerAdapter.ViewHold
         return mTrailers.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder{
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView mTrailerName;
         ImageView mTrailerPoster;
         TextView mSiteName;
         TextView mQualityName;
 
-
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             mTrailerName = (TextView) itemView.findViewById(R.id.trailerName);
             mTrailerPoster = (ImageView) itemView.findViewById(R.id.imageView2);

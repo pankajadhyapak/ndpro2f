@@ -1,7 +1,6 @@
 package in.pankajadhyapak.popularmovies2.fragments;
 
 
-import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -18,19 +17,20 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 import in.pankajadhyapak.popularmovies2.R;
 import in.pankajadhyapak.popularmovies2.adapters.MovieAdapter;
-import in.pankajadhyapak.popularmovies2.data.MovieDbHelper;
+import in.pankajadhyapak.popularmovies2.data.MovieRepository;
 import in.pankajadhyapak.popularmovies2.models.Movie;
 
 public class Favourites extends Fragment {
 
-    @Bind(R.id.recycler_view)
-    RecyclerView recyclerView;
+    private static final String TAG = MostPopular.class.getSimpleName();
 
     private GridLayoutManager layout;
-    private static final String MOVIE_DB_KEY = "movieList";
-    private static final String TAG = MostPopular.class.getSimpleName();
     private ArrayList<Movie> allMovies = new ArrayList<>();
     private RecyclerView.Adapter mMovieAdapter;
+    private MovieRepository mMovieRepository;
+
+    @Bind(R.id.recycler_view)
+    RecyclerView recyclerView;
 
     public Favourites() {
     }
@@ -45,18 +45,17 @@ public class Favourites extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_favourites, container, false);
         ButterKnife.bind(this, view);
+        mMovieRepository = new MovieRepository(getContext());
         return view;
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        MovieDbHelper dbHelper = new MovieDbHelper(getContext());
         allMovies.clear();
-        allMovies = dbHelper.getAllMovies();
+        allMovies = mMovieRepository.getAllMovies();
         recyclerView.setLayoutManager(new GridLayoutManager(getActivity(), numberOfColumns()));
         mMovieAdapter = new MovieAdapter(getActivity(), allMovies);
         recyclerView.setAdapter(mMovieAdapter);
@@ -71,16 +70,6 @@ public class Favourites extends Fragment {
         int nColumns = width / widthDivider;
         if (nColumns < 2) return 2;
         return nColumns;
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
     }
 
     @Override

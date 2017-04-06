@@ -13,29 +13,28 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-/**
- * Created by pankaj on 04/04/17.
- */
-
 public class RetroFit {
 
     private static final String TAG = "RetroFit getInstance";
+
+    private static final int MAX_SIZE = 5 * 1024 * 1024; // 5 MB
 
     public static Retrofit getInstance() {
 
         OkHttpClient.Builder httpClient = new OkHttpClient.Builder();
 
         // For logging Requests and Response ( only for Development )
-        if(BuildConfig.DEBUG) {
+        if (BuildConfig.DEBUG) {
             HttpLoggingInterceptor logging = new HttpLoggingInterceptor();
             logging.setLevel(HttpLoggingInterceptor.Level.BODY);
             httpClient.addInterceptor(logging);
         }
 
-        //Caching responses
-        httpClient.cache(new Cache(App.getInstance().getCacheDir(), 5 * 1024 * 1024)) // 10 MB
+        //Caching responses for offline usw
+        httpClient.cache(new Cache(App.getInstance().getCacheDir(), MAX_SIZE))
                 .addInterceptor(new Interceptor() {
-                    @Override public okhttp3.Response intercept(Chain chain) throws IOException {
+                    @Override
+                    public okhttp3.Response intercept(Chain chain) throws IOException {
                         Request request = chain.request();
                         if (App.hasNetwork()) {
                             request = request.newBuilder().header("Cache-Control", "public, max-age=" + 60).build();

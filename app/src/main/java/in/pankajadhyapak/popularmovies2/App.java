@@ -8,14 +8,9 @@ import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.View;
 
-
-/**
- * Created by pankaj on 04/04/17.
- */
-
 public class App extends Application {
 
-    private static final String TAG = "App";
+    private static final String TAG = "Mail Application Class";
     private static App instance;
 
     @Override
@@ -44,7 +39,10 @@ public class App extends Application {
     }
 
     public static void showNetworkError(View v) {
-        Snackbar.make(v, "Please connect to wifi or enable cellular data!", Snackbar.LENGTH_LONG)
-                .setAction("Action", null).show();
+        Snackbar.make(v, R.string.network_error_msg, Snackbar.LENGTH_LONG).show();
+    }
+
+    public static void showNetworkLoading(View v) {
+        Snackbar.make(v, R.string.loading_data_msg, Snackbar.LENGTH_LONG).show();
     }
 }

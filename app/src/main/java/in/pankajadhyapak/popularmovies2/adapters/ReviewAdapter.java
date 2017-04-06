@@ -16,13 +16,14 @@ import in.pankajadhyapak.popularmovies2.models.Review;
 
 public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder> {
 
+    private static final String TAG = "ReviewAdapter";
     private ArrayList<Review> mTrailers;
     private Context mContext;
 
     public ReviewAdapter(Context mContext, ArrayList<Review> movies) {
         this.mTrailers = movies;
         this.mContext = mContext;
-        Log.e("Adapter", "ReviewAdapter: " + mTrailers.size());
+        Log.e(TAG, "ReviewAdapter: " + mTrailers.size());
     }
 
     @Override
@@ -34,8 +35,8 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
     @Override
     public void onBindViewHolder(final ViewHolder holder, final int position) {
         final Review trailer = mTrailers.get(position);
-        Log.e("ReviewAdapter", "onBindViewHolder: "+ trailer.getAuthor());
-        holder.mAuthor.setText(trailer.getAuthor()+" says...");
+        Log.e("ReviewAdapter", "onBindViewHolder: " + trailer.getAuthor());
+        holder.mAuthor.setText(String.format(mContext.getString(R.string.trailer_author_says), trailer.getAuthor()));
         holder.mReview.setText(trailer.getContent());
     }
 
@@ -44,12 +45,12 @@ public class ReviewAdapter extends RecyclerView.Adapter<ReviewAdapter.ViewHolder
         return mTrailers.size();
     }
 
-    public static class ViewHolder extends RecyclerView.ViewHolder{
+    static class ViewHolder extends RecyclerView.ViewHolder {
 
         TextView mAuthor;
         TextView mReview;
 
-        public ViewHolder(View itemView) {
+        ViewHolder(View itemView) {
             super(itemView);
             mAuthor = (TextView) itemView.findViewById(R.id.reviewAuthor);
             mReview = (TextView) itemView.findViewById(R.id.reviewText);

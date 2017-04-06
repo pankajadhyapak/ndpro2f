@@ -30,7 +30,7 @@ import in.pankajadhyapak.popularmovies2.adapters.ReviewAdapter;
 import in.pankajadhyapak.popularmovies2.adapters.TrailerAdapter;
 import in.pankajadhyapak.popularmovies2.api.MovieApi;
 import in.pankajadhyapak.popularmovies2.api.RetroFit;
-import in.pankajadhyapak.popularmovies2.data.MovieDbHelper;
+import in.pankajadhyapak.popularmovies2.data.MovieRepository;
 import in.pankajadhyapak.popularmovies2.models.AllReviews;
 import in.pankajadhyapak.popularmovies2.models.AllTrailers;
 import in.pankajadhyapak.popularmovies2.models.Movie;
@@ -41,10 +41,13 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+import static in.pankajadhyapak.popularmovies2.Constants.MOVIE_DETAIL;
+import static in.pankajadhyapak.popularmovies2.Constants.TMDB_IMAGE_W500;
+
 public class MovieDetails extends AppCompatActivity {
 
     private static final String TAG = "MovieDetails";
-    private static final String API_URL = "http://api.themoviedb.org/3/movie/";
+
 
     @Bind(R.id.toolbar)
     Toolbar toolbar;
@@ -75,8 +78,7 @@ public class MovieDetails extends AppCompatActivity {
     private RecyclerView.Adapter mTrailerAdapter;
     private RecyclerView.Adapter mReviewAdapter;
     private Movie movie;
-    MovieDbHelper mDbHelper;
-
+    private MovieRepository mMovieRepository;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -86,8 +88,8 @@ public class MovieDetails extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         Intent intent = getIntent();
-        movie = (Movie) intent.getParcelableExtra("movie_detail");
-        mDbHelper = new MovieDbHelper(this);
+        movie = intent.getParcelableExtra(MOVIE_DETAIL);
+        mMovieRepository = new MovieRepository(this);
         Log.e(TAG, "onCreate: " + movie.getTitle());
 
         ActionBar ab = getSupportActionBar();
@@ -96,11 +98,10 @@ public class MovieDetails extends AppCompatActivity {
             ab.setDisplayHomeAsUpEnabled(true);
         }
 
-
         setFabIcon(movie.getId());
 
         if (movie.getPosterPath() != null) {
-            String posterUrl = "http://image.tmdb.org/t/p/w500/" + movie.getPosterPath();
+            String posterUrl = TMDB_IMAGE_W500 + movie.getPosterPath();
             Picasso.with(this)
                     .load(posterUrl)
                     .placeholder(R.drawable.empty_photo)
@@ -119,25 +120,24 @@ public class MovieDetails extends AppCompatActivity {
         trailerRv.setAdapter(mTrailerAdapter);
 
         reviewRv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false));
-        reviewRv.setNestedScrollingEnabled(false);
         mReviewAdapter = new ReviewAdapter(this, allReviews);
         reviewRv.setAdapter(mReviewAdapter);
 
-        if(App.hasNetwork()){
+        if (App.hasNetwork()) {
             getTrailers(movie.getId());
             getReviews(movie.getId());
-        }else {
+        } else {
             App.showNetworkError(reviewRv);
         }
 
     }
 
     private void setFabIcon(Integer id) {
-        if(mDbHelper.movieExists(id)){
-            Log.e(TAG, "not fav "+id);
+        if (mMovieRepository.getMovie(id).getId() != null) {
+            Log.e(TAG, "not fav " + id);
             fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite));
-        }else{
-            Log.e(TAG, "fav "+id);
+        } else {
+            Log.e(TAG, "fav " + id);
             fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite_border));
         }
     }
@@ -196,25 +196,21 @@ public class MovieDetails extends AppCompatActivity {
 
     @OnClick(R.id.fab)
     public void onViewClicked(View v) {
-        Log.e(TAG, "check movie: "+mDbHelper.movieExists(movie.getId()));
-        if(mDbHelper.movieExists(movie.getId())){
-            int deletedRows = mDbHelper.deleteMovie(movie.getId());
-            Log.e(TAG, "delete movie: "+deletedRows );
-            if(deletedRows > 0){
+        if (mMovieRepository.getMovie(movie.getId()).getId() != null) {
+            int deletedRows = mMovieRepository.deleteMovie(movie.getId());
+            Log.e(TAG, "deleted movie: " + deletedRows);
+            if (deletedRows > 0) {
                 fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite_border));
-                Snackbar.make(v, "Removed From Favourites", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Snackbar.make(v, R.string.fav_removed_msg, Snackbar.LENGTH_SHORT).show();
             }
-        }else{
-            long newRowId = mDbHelper.addMovie(movie);
-            if(newRowId > 0){
-                Log.e(TAG, "onViewClicked: "+newRowId );
+        } else {
+            long newRowId = mMovieRepository.addMovie(movie);
+            if (newRowId > 0) {
+                Log.e(TAG, "onViewClicked: " + newRowId);
                 fab.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_favorite));
-                Snackbar.make(v, "Movie Added to Favourites", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }else{
-                Snackbar.make(v, "Failed to Add", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                Snackbar.make(v, R.string.fav_movie_added, Snackbar.LENGTH_SHORT).show();
+            } else {
+                Snackbar.make(v, R.string.movie_add_failed, Snackbar.LENGTH_LONG).show();
             }
         }
     }

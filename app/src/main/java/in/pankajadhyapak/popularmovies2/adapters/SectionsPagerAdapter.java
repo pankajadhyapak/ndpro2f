@@ -1,22 +1,22 @@
 package in.pankajadhyapak.popularmovies2.adapters;
 
+import android.content.Context;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
+import in.pankajadhyapak.popularmovies2.R;
 import in.pankajadhyapak.popularmovies2.fragments.Favourites;
 import in.pankajadhyapak.popularmovies2.fragments.HighestRated;
 import in.pankajadhyapak.popularmovies2.fragments.MostPopular;
-import in.pankajadhyapak.popularmovies2.fragments.PlaceholderFragment;
-
-/**
- * Created by pankaj on 04/04/17.
- */
 
 public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-    public SectionsPagerAdapter(FragmentManager fm) {
+    private Context mContext;
+
+    public SectionsPagerAdapter(Context context, FragmentManager fm) {
         super(fm);
+        this.mContext = context;
     }
 
     @Override
@@ -35,7 +35,6 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
     @Override
     public int getCount() {
-        // Show 3 total pages.
         return 3;
     }
 
@@ -43,11 +42,11 @@ public class SectionsPagerAdapter extends FragmentPagerAdapter {
     public CharSequence getPageTitle(int position) {
         switch (position) {
             case 0:
-                return "Most Popular";
+                return mContext.getString(R.string.most_popular_title);
             case 1:
-                return "Highest Rated";
+                return mContext.getString(R.string.highest_rated_title);
             case 2:
-                return "Favourites";
+                return mContext.getString(R.string.favourites_title);
         }
         return null;
     }
